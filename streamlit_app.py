@@ -1,259 +1,218 @@
 # -*- coding: utf-8 -*-
-# Copyright 2024-2025 Streamlit Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-from datetime import datetime
+from datetime import date
+import pandas as pd
 import streamlit as st
 import altair as alt
-import vega_datasets
-
-
-full_df = vega_datasets.data("seattle_weather")
+import requests
 
 st.set_page_config(
-    # Title and icon for the browser's tab bar:
-    page_title="Seattle Weather",
-    page_icon="🌦️",
-    # Make the content take up the width of the page:
+    page_title="Capital Weather Comparison",
+    page_icon="🌍",
     layout="wide",
 )
 
+st.title("🌍 수도별 날씨 비교")
+st.write("Korea, USA, Italy, Germany, Switzerland, Sweden, Canada, Japan, China, Turkey의 수도 날씨를 비교합니다.")
 
-"""
-# Seattle Weather
+CAPITALS = {
+    "Korea - Seoul": {"lat": 37.5665, "lon": 126.9780},
+    "USA - Washington D.C.": {"lat": 38.9072, "lon": -77.0369},
+    "Italy - Rome": {"lat": 41.9028, "lon": 12.4964},
+    "Germany - Berlin": {"lat": 52.5200, "lon": 13.4050},
+    "Switzerland - Bern": {"lat": 46.9480, "lon": 7.4474},
+    "Sweden - Stockholm": {"lat": 59.3293, "lon": 18.0686},
+    "Canada - Ottawa": {"lat": 45.4215, "lon": -75.6972},
+    "Japan - Tokyo": {"lat": 35.6762, "lon": 139.6503},
+    "China - Beijing": {"lat": 39.9042, "lon": 116.4074},
+    "Turkey - Ankara": {"lat": 39.9334, "lon": 32.8597},
+}
 
-Let's explore the [classic Seattle Weather
-dataset](https://altair-viz.github.io/case_studies/exploring-weather.html)!
-"""
+@st.cache_data
+def load_weather(city_name, lat, lon, start_date, end_date):
+    url = "https://archive-api.open-meteo.com/v1/archive"
 
-""  # Add a little vertical space. Same as st.write("").
-""
-
-"""
-## 2015 Summary
-"""
-
-""
-
-df_2015 = full_df[full_df["date"].dt.year == 2015]
-df_2014 = full_df[full_df["date"].dt.year == 2014]
-
-max_temp_2015 = df_2015["temp_max"].max()
-max_temp_2014 = df_2014["temp_max"].max()
-
-min_temp_2015 = df_2015["temp_min"].min()
-min_temp_2014 = df_2014["temp_min"].min()
-
-max_wind_2015 = df_2015["wind"].max()
-max_wind_2014 = df_2014["wind"].max()
-
-min_wind_2015 = df_2015["wind"].min()
-min_wind_2014 = df_2014["wind"].min()
-
-max_prec_2015 = df_2015["precipitation"].max()
-max_prec_2014 = df_2014["precipitation"].max()
-
-min_prec_2015 = df_2015["precipitation"].min()
-min_prec_2014 = df_2014["precipitation"].min()
-
-
-with st.container(horizontal=True, gap="medium"):
-    cols = st.columns(2, gap="medium", width=300)
-
-    with cols[0]:
-        st.metric(
-            "Max tempearture",
-            f"{max_temp_2015:0.1f}C",
-            delta=f"{max_temp_2015 - max_temp_2014:0.1f}C",
-            width="content",
-        )
-
-    with cols[1]:
-        st.metric(
-            "Min tempearture",
-            f"{min_temp_2015:0.1f}C",
-            delta=f"{min_temp_2015 - min_temp_2014:0.1f}C",
-            width="content",
-        )
-
-    cols = st.columns(2, gap="medium", width=300)
-
-    with cols[0]:
-        st.metric(
-            "Max precipitation",
-            f"{max_prec_2015:0.1f}C",
-            delta=f"{max_prec_2015 - max_prec_2014:0.1f}C",
-            width="content",
-        )
-
-    with cols[1]:
-        st.metric(
-            "Min precipitation",
-            f"{min_prec_2015:0.1f}C",
-            delta=f"{min_prec_2015 - min_prec_2014:0.1f}C",
-            width="content",
-        )
-
-    cols = st.columns(2, gap="medium", width=300)
-
-    with cols[0]:
-        st.metric(
-            "Max wind",
-            f"{max_wind_2015:0.1f}m/s",
-            delta=f"{max_wind_2015 - max_wind_2014:0.1f}m/s",
-            width="content",
-        )
-
-    with cols[1]:
-        st.metric(
-            "Min wind",
-            f"{min_wind_2015:0.1f}m/s",
-            delta=f"{min_wind_2015 - min_wind_2014:0.1f}m/s",
-            width="content",
-        )
-
-    cols = st.columns(2, gap="medium", width=300)
-
-    weather_icons = {
-        "sun": "☀️",
-        "snow": "☃️",
-        "rain": "💧",
-        "fog": "😶‍🌫️",
-        "drizzle": "🌧️",
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "start_date": start_date,
+        "end_date": end_date,
+        "daily": [
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "precipitation_sum",
+            "wind_speed_10m_max",
+        ],
+        "timezone": "auto",
     }
 
-    with cols[0]:
-        weather_name = (
-            full_df["weather"].value_counts().head(1).reset_index()["weather"][0]
-        )
-        st.metric(
-            "Most common weather",
-            f"{weather_icons[weather_name]} {weather_name.upper()}",
-        )
+    response = requests.get(url, params=params)
+    response.raise_for_status()
 
-    with cols[1]:
-        weather_name = (
-            full_df["weather"].value_counts().tail(1).reset_index()["weather"][0]
-        )
-        st.metric(
-            "Least common weather",
-            f"{weather_icons[weather_name]} {weather_name.upper()}",
-        )
+    data = response.json()["daily"]
+    df = pd.DataFrame(data)
+    df["date"] = pd.to_datetime(df["time"])
+    df["city"] = city_name
 
-""
-""
+    df = df.rename(
+        columns={
+            "temperature_2m_max": "temp_max",
+            "temperature_2m_min": "temp_min",
+            "precipitation_sum": "precipitation",
+            "wind_speed_10m_max": "wind",
+        }
+    )
 
-"""
-## Compare different years
-"""
+    return df[["date", "city", "temp_max", "temp_min", "precipitation", "wind"]]
 
-YEARS = full_df["date"].dt.year.unique()
-selected_years = st.pills(
-    "Years to compare", YEARS, default=YEARS, selection_mode="multi"
+
+st.sidebar.header("설정")
+
+selected_cities = st.sidebar.multiselect(
+    "비교할 수도 선택",
+    options=list(CAPITALS.keys()),
+    default=list(CAPITALS.keys()),
 )
 
-if not selected_years:
-    st.warning("You must select at least 1 year.", icon=":material/warning:")
+start_date = st.sidebar.date_input("시작일", date(2023, 1, 1))
+end_date = st.sidebar.date_input("종료일", date(2023, 12, 31))
 
-df = full_df[full_df["date"].dt.year.isin(selected_years)]
+if start_date > end_date:
+    st.error("시작일은 종료일보다 앞서야 합니다.")
+    st.stop()
 
-cols = st.columns([3, 1])
+if not selected_cities:
+    st.warning("최소 1개 이상의 수도를 선택하세요.")
+    st.stop()
 
-with cols[0].container(border=True, height="stretch"):
-    "### Temperature"
+dfs = []
 
-    st.altair_chart(
-        alt.Chart(df)
-        .mark_bar(width=1)
-        .encode(
-            alt.X("date", timeUnit="monthdate").title("date"),
-            alt.Y("temp_max").title("temperature range (C)"),
-            alt.Y2("temp_min"),
-            alt.Color("date:N", timeUnit="year").title("year"),
-            alt.XOffset("date:N", timeUnit="year"),
+for city in selected_cities:
+    info = CAPITALS[city]
+    dfs.append(
+        load_weather(
+            city,
+            info["lat"],
+            info["lon"],
+            str(start_date),
+            str(end_date),
         )
-        .configure_legend(orient="bottom")
     )
 
-with cols[1].container(border=True, height="stretch"):
-    "### Weather distribution"
+df = pd.concat(dfs, ignore_index=True)
 
-    st.altair_chart(
-        alt.Chart(df)
-        .mark_arc()
-        .encode(
-            alt.Theta("count()"),
-            alt.Color("weather:N"),
-        )
-        .configure_legend(orient="bottom")
+st.subheader("요약 지표")
+
+summary = (
+    df.groupby("city")
+    .agg(
+        max_temp=("temp_max", "max"),
+        min_temp=("temp_min", "min"),
+        total_precipitation=("precipitation", "sum"),
+        max_wind=("wind", "max"),
     )
+    .reset_index()
+)
 
+st.dataframe(summary, use_container_width=True)
 
 cols = st.columns(2)
 
-with cols[0].container(border=True, height="stretch"):
-    "### Wind"
+with cols[0].container(border=True):
+    st.markdown("### 최고 기온 비교")
 
-    st.altair_chart(
+    chart = (
         alt.Chart(df)
-        .transform_window(
-            avg_wind="mean(wind)",
-            std_wind="stdev(wind)",
-            frame=[0, 14],
-            groupby=["monthdate(date)"],
-        )
-        .mark_line(size=1)
+        .mark_line()
         .encode(
-            alt.X("date", timeUnit="monthdate").title("date"),
-            alt.Y("avg_wind:Q").title("average wind past 2 weeks (m/s)"),
-            alt.Color("date:N", timeUnit="year").title("year"),
+            x=alt.X("date:T", title="Date"),
+            y=alt.Y("temp_max:Q", title="Max temperature (°C)"),
+            color=alt.Color("city:N", title="Capital"),
+            tooltip=["date:T", "city:N", "temp_max:Q"],
         )
-        .configure_legend(orient="bottom")
+        .interactive()
     )
 
-with cols[1].container(border=True, height="stretch"):
-    "### Precipitation"
+    st.altair_chart(chart, use_container_width=True)
 
-    st.altair_chart(
+with cols[1].container(border=True):
+    st.markdown("### 최저 기온 비교")
+
+    chart = (
         alt.Chart(df)
-        .mark_bar()
+        .mark_line()
         .encode(
-            alt.X("date:N", timeUnit="month").title("date"),
-            alt.Y("precipitation:Q").aggregate("sum").title("precipitation (mm)"),
-            alt.Color("date:N", timeUnit="year").title("year"),
+            x=alt.X("date:T", title="Date"),
+            y=alt.Y("temp_min:Q", title="Min temperature (°C)"),
+            color=alt.Color("city:N", title="Capital"),
+            tooltip=["date:T", "city:N", "temp_min:Q"],
         )
-        .configure_legend(orient="bottom")
+        .interactive()
     )
+
+    st.altair_chart(chart, use_container_width=True)
 
 cols = st.columns(2)
 
-with cols[0].container(border=True, height="stretch"):
-    "### Monthly weather breakdown"
-    ""
+with cols[0].container(border=True):
+    st.markdown("### 강수량 비교")
 
-    st.altair_chart(
+    chart = (
         alt.Chart(df)
         .mark_bar()
         .encode(
-            alt.X("month(date):O", title="month"),
-            alt.Y("count():Q", title="days").stack("normalize"),
-            alt.Color("weather:N"),
+            x=alt.X("month(date):O", title="Month"),
+            y=alt.Y("sum(precipitation):Q", title="Total precipitation (mm)"),
+            color=alt.Color("city:N", title="Capital"),
+            tooltip=["city:N", "sum(precipitation):Q"],
         )
-        .configure_legend(orient="bottom")
     )
 
-with cols[1].container(border=True, height="stretch"):
-    "### Raw data"
+    st.altair_chart(chart, use_container_width=True)
 
-    st.dataframe(df)
+with cols[1].container(border=True):
+    st.markdown("### 최대 풍속 비교")
+
+    chart = (
+        alt.Chart(df)
+        .mark_line()
+        .encode(
+            x=alt.X("date:T", title="Date"),
+            y=alt.Y("wind:Q", title="Max wind speed (km/h)"),
+            color=alt.Color("city:N", title="Capital"),
+            tooltip=["date:T", "city:N", "wind:Q"],
+        )
+        .interactive()
+    )
+
+    st.altair_chart(chart, use_container_width=True)
+
+st.subheader("월별 평균 기온 비교")
+
+monthly = df.copy()
+monthly["month"] = monthly["date"].dt.month
+
+monthly_summary = (
+    monthly.groupby(["city", "month"])
+    .agg(
+        avg_max_temp=("temp_max", "mean"),
+        avg_min_temp=("temp_min", "mean"),
+    )
+    .reset_index()
+)
+
+chart = (
+    alt.Chart(monthly_summary)
+    .mark_line(point=True)
+    .encode(
+        x=alt.X("month:O", title="Month"),
+        y=alt.Y("avg_max_temp:Q", title="Average max temperature (°C)"),
+        color=alt.Color("city:N", title="Capital"),
+        tooltip=["city:N", "month:O", "avg_max_temp:Q"],
+    )
+)
+
+st.altair_chart(chart, use_container_width=True)
+
+st.subheader("Raw data")
+st.dataframe(df, use_container_width=True)
