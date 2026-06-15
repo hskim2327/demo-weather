@@ -1,56 +1,45 @@
-# Streamlit Seattle Weather dashboard => Capital Weather Dashboard
+# Capital Weather Dashboard
 
-A Streamlit dashboard that compares weather data from capital cities around the world.
+A Streamlit dashboard for comparing weather data across capital cities around the world.
 
 ## Cities
 
-- Seoul
-- Washington D.C.
-- Rome
-- Berlin
-- Bern
-- Stockholm
-- Ottawa
-- Tokyo
-- Beijing
-- Ankara
+* Seoul
+* Washington D.C.
+* Rome
+* Berlin
+* Bern
+* Stockholm
+* Ottawa
+* Tokyo
+* Beijing
+* Ankara
 
 ## Features
 
-- Max/Min Temperature Comparison
-- Precipitation Analysis
-- Wind Speed Comparison
-- Monthly Temperature Trends
+* Maximum temperature comparison
+* Minimum temperature comparison
+* Precipitation analysis
+* Wind speed analysis
+* Monthly temperature trends
+
+## Data Source
+
+Weather data is provided by the Open-Meteo API.
+
+## Attribution
+
+This project was originally based on the Streamlit example project `demo-seattle-weather` and has been modified to compare weather data from multiple world capitals.
+
+Original project:
+https://github.com/streamlit/demo-seattle-weather
 
 ## Run Locally
 
 ```bash
 streamlit run streamlit_app.py
+```
 
-## View it in one click
+## License
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](http://demo-seattle-weather.streamlit.app/)
-
-## Try it on your machine
-
-1. Get the code:
-
-   ```sh
-   $ git clone https://github.com/streamlit/demo-seattle-weather.git
-   ```
-
-2. Start a virtual environment and get the dependencies (requires uv):
-
-   ```sh
-   $ uv venv
-
-   $ .venv/bin/activate
-
-   $ uv sync
-   ```
-
-3. Start the app:
-
-    ```sh
-    $ streamlit run streamlit_app.py
-    ```
+This project includes code derived from the Streamlit example project and is distributed under the Apache License 2.0. See the LICENSE file for details.
