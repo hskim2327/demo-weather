@@ -1,6 +1,33 @@
 # Streamlit Seattle Weather dashboard
 
-Just an example Streamlit dashboard exploring the classic Seattle Weather dataset.
+# Capital Weather Dashboard
+
+A Streamlit dashboard that compares weather data from capital cities around the world.
+
+## Cities
+
+- Seoul
+- Washington D.C.
+- Rome
+- Berlin
+- Bern
+- Stockholm
+- Ottawa
+- Tokyo
+- Beijing
+- Ankara
+
+## Features
+
+- Max/Min Temperature Comparison
+- Precipitation Analysis
+- Wind Speed Comparison
+- Monthly Temperature Trends
+
+## Run Locally
+
+```bash
+streamlit run streamlit_app.py
 
 ## View it in one click
 
