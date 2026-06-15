@@ -1,6 +1,4 @@
-# Streamlit Seattle Weather dashboard
-
-# Capital Weather Dashboard
+# Streamlit Seattle Weather dashboard => Capital Weather Dashboard
 
 A Streamlit dashboard that compares weather data from capital cities around the world.
 
